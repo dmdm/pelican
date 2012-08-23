@@ -53,7 +53,7 @@ class Page(object):
             if 'AUTHOR' in settings:
                 self.author = Author(settings['AUTHOR'], settings)
             else:
-                title = filename.decode('utf-8') if filename else self.title
+                title = filename if filename else self.title
                 self.author = Author(getenv('USER', 'John Doe'), settings)
                 logger.warning("Author of `{0}' unknown, assuming that his name is "
                          "`{1}'".format(title, self.author))
