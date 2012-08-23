@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- #
 
-AUTHOR = u"$author"
-SITENAME = u"$sitename"
+AUTHOR = "$author"
+SITENAME = "$sitename"
 SITEURL = ''
 
 TIMEZONE = 'Europe/Paris'
