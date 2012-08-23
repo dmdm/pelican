@@ -86,13 +86,20 @@ class Page(object):
             self.date_format = self.date_format[1]
 
         if hasattr(self, 'date'):
+            # Py3k: strftime() needs str as 1st arg, not bytes
             encoded_date = self.date.strftime(
-                    self.date_format.encode('ascii', 'xmlcharrefreplace'))
+                    str(self.date_format.encode('ascii', 'xmlcharrefreplace')))
 
+            # Py3k: strftime() returns str, which already is unicode, and is
+            #       missing decode().
+            #       Why the special treatment for Win32?
             if platform == 'win32':
-                self.locale_date = encoded_date.decode(stdin.encoding)
+                # TODO Perform the proper conversion of encoding for Win32
+                # self.locale_date = encoded_date.decode(stdin.encoding)
+                self.locale_date = encoded_date
             else:
-                self.locale_date = encoded_date.decode('utf')
+                # Just removing decode() here should be sufficient
+                self.locale_date = encoded_date
 
         # manage status
         if not hasattr(self, 'status'):
