@@ -51,7 +51,13 @@ def slugify(value):
         import unicodedata
         from unidecode import unidecode
         value = str(unidecode(value))
-        value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+        value = unicodedata.normalize('NFKD', value)
+        # Py3K: encode() returns bytes, not str anymore. 
+        #       This breaks compilation of the following regex. Either we change
+        #       the pattern to be bytes too, or we convert value back to str.
+        #       I prefer the latter.
+        value = value.encode('ascii', 'ignore')
+        value = str(value)
     value = str(re.sub('[^\w\s-]', '', value).strip().lower())
     return re.sub('[-\s]+', '-', value)
 
