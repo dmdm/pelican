@@ -39,7 +39,7 @@ class Page(object):
         local_metadata.update(metadata)
 
         # set metadata as attributes
-        for key, value in list(local_metadata.items()):
+        for key, value in local_metadata.items():
             setattr(self, key.lower(), value)
 
         # also keep track of the metadata attributes available
@@ -55,7 +55,7 @@ class Page(object):
             else:
                 title = filename.decode('utf-8') if filename else self.title
                 self.author = Author(getenv('USER', 'John Doe'), settings)
-                logger.warning("Author of `{0}' unknown, assuming that his name is "
+                logger.warning(u"Author of `{0}' unknown, assuming that his name is "
                          "`{1}'".format(title, self.author))
 
         # manage languages
@@ -175,7 +175,7 @@ class Quote(Page):
 
 class URLWrapper(object):
     def __init__(self, name, settings):
-        self.name = str(name)
+        self.name = unicode(name)
         self.slug = slugify(self.name)
         self.settings = settings
 
@@ -186,7 +186,7 @@ class URLWrapper(object):
         return hash(self.name)
 
     def __eq__(self, other):
-        return self.name == str(other)
+        return self.name == unicode(other)
 
     def __str__(self):
         return str(self.name.encode('utf-8', 'replace'))
@@ -197,11 +197,11 @@ class URLWrapper(object):
     def _from_settings(self, key):
         setting = "%s_%s" % (self.__class__.__name__.upper(), key)
         value = self.settings[setting]
-        if not isinstance(value, str):
-            logger.warning('%s is set to %s' % (setting, value))
+        if not isinstance(value, basestring):
+            logger.warning(u'%s is set to %s' % (setting, value))
             return value
         else:
-            return str(value).format(**self.as_dict())
+            return unicode(value).format(**self.as_dict())
 
     url = property(functools.partial(_from_settings, key='URL'))
     save_as = property(functools.partial(_from_settings, key='SAVE_AS'))
@@ -213,7 +213,7 @@ class Category(URLWrapper):
 
 class Tag(URLWrapper):
     def __init__(self, name, *args, **kwargs):
-        super(Tag, self).__init__(str.strip(name), *args, **kwargs)
+        super(Tag, self).__init__(unicode.strip(name), *args, **kwargs)
 
 
 class Author(URLWrapper):
@@ -224,7 +224,7 @@ def is_valid_content(content, f):
     try:
         content.check_properties()
         return True
-    except NameError as e:
-        logger.error("Skipping %s: impossible to find informations about '%s'"\
+    except NameError, e:
+        logger.error(u"Skipping %s: impossible to find informations about '%s'"\
                 % (f, e))
         return False

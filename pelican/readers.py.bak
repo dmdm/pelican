@@ -20,9 +20,9 @@ from pelican.utils import get_date, open
 
 
 _METADATA_PROCESSORS = {
-    'tags': lambda x, y: [Tag(tag, y) for tag in str(x).split(',')],
+    'tags': lambda x, y: [Tag(tag, y) for tag in unicode(x).split(',')],
     'date': lambda x, y: get_date(x),
-    'status': lambda x, y: str.strip(x),
+    'status': lambda x, y: unicode.strip(x),
     'category': Category,
     'author': Author,
 }
@@ -134,7 +134,7 @@ class MarkdownReader(Reader):
         content = md.convert(text)
 
         metadata = {}
-        for name, value in list(md.Meta.items()):
+        for name, value in md.Meta.items():
             name = name.lower()
             metadata[name] = self.process_metadata(name, value[0])
         return content, metadata

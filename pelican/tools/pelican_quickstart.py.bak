@@ -48,9 +48,9 @@ def ask(question, answer=str, default=None, l=None):
         r = ''
         while True:
             if default:
-                r = input('> {0} [{1}] '.format(question, default))
+                r = raw_input('> {0} [{1}] '.format(question, default))
             else:
-                r = input('> {0} '.format(question, default))
+                r = raw_input('> {0} '.format(question, default))
 
             r = r.strip()
 
@@ -62,7 +62,7 @@ def ask(question, answer=str, default=None, l=None):
                     print('You must enter something')
             else:
                 if l and len(r) != l:
-                    print(('You must enter a {0} letters long string'.format(l)))
+                    print('You must enter a {0} letters long string'.format(l))
                 else:
                    break
 
@@ -72,11 +72,11 @@ def ask(question, answer=str, default=None, l=None):
         r = None
         while True:
             if default is True:
-                r = input('> {0} (Y/n) '.format(question))
+                r = raw_input('> {0} (Y/n) '.format(question))
             elif default is False:
-                r = input('> {0} (y/N) '.format(question))
+                r = raw_input('> {0} (y/N) '.format(question))
             else:
-                r = input('> {0} (y/n) '.format(question))
+                r = raw_input('> {0} (y/n) '.format(question))
 
             r = r.strip().lower()
 
@@ -96,9 +96,9 @@ def ask(question, answer=str, default=None, l=None):
         r = None
         while True:
             if default:
-                r = input('> {0} [{1}] '.format(question, default))
+                r = raw_input('> {0} [{1}] '.format(question, default))
             else:
-                r = input('> {0} '.format(question))
+                r = raw_input('> {0} '.format(question))
 
             r = r.strip()
 
@@ -131,18 +131,18 @@ def main():
 
     args = parser.parse_args()
 
-    print(('''Welcome to pelican-quickstart v{v}.
+    print('''Welcome to pelican-quickstart v{v}.
 
 This script will help you create a new Pelican-based website.
 
 Please answer the following questions so this script can generate the files needed by Pelican.
 
-    '''.format(v=__version__)))
+    '''.format(v=__version__))
 
     project = os.path.join(os.environ.get('VIRTUAL_ENV', '.'), '.project')
     if os.path.isfile(project):
         CONF['basedir'] = open(project, 'r').read().rstrip("\n")
-        print(('Using project associated with current virtual environment. Will save to:\n%s\n' % CONF['basedir']))
+        print('Using project associated with current virtual environment. Will save to:\n%s\n' % CONF['basedir'])
     else:
         CONF['basedir'] = os.path.abspath(ask('Where do you want to create your new web site?', answer=str, default=args.path))
 
@@ -178,13 +178,13 @@ Please answer the following questions so this script can generate the files need
 
     try:
         os.makedirs(os.path.join(CONF['basedir'], 'content'))
-    except OSError as e:
-        print(('Error: {0}'.format(e)))
+    except OSError, e:
+        print('Error: {0}'.format(e))
 
     try:
         os.makedirs(os.path.join(CONF['basedir'], 'output'))
-    except OSError as e:
-        print(('Error: {0}'.format(e)))
+    except OSError, e:
+        print('Error: {0}'.format(e))
 
     try:
         with open(os.path.join(CONF['basedir'], 'pelicanconf.py'), 'w') as fd:
@@ -192,8 +192,8 @@ Please answer the following questions so this script can generate the files need
                 template = string.Template(line)
                 fd.write(template.safe_substitute(CONF))
             fd.close()
-    except OSError as e:
-        print(('Error: {0}'.format(e)))
+    except OSError, e:
+        print('Error: {0}'.format(e))
 
     try:
         with open(os.path.join(CONF['basedir'], 'publishconf.py'), 'w') as fd:
@@ -201,8 +201,8 @@ Please answer the following questions so this script can generate the files need
                 template = string.Template(line)
                 fd.write(template.safe_substitute(CONF))
             fd.close()
-    except OSError as e:
-        print(('Error: {0}'.format(e)))
+    except OSError, e:
+        print('Error: {0}'.format(e))
 
     if mkfile:
         try:
@@ -211,8 +211,8 @@ Please answer the following questions so this script can generate the files need
                     template = string.Template(line)
                     fd.write(template.safe_substitute(CONF))
                 fd.close()
-        except OSError as e:
-            print(('Error: {0}'.format(e)))
+        except OSError, e:
+            print('Error: {0}'.format(e))
 
     if develop:
         try:
@@ -221,8 +221,8 @@ Please answer the following questions so this script can generate the files need
                     template = string.Template(line)
                     fd.write(template.safe_substitute(CONF))
                 fd.close()
-                os.chmod((os.path.join(CONF['basedir'], 'develop_server.sh')), 0o755)
-        except OSError as e:
-            print(('Error: {0}'.format(e)))
+                os.chmod((os.path.join(CONF['basedir'], 'develop_server.sh')), 0755)
+        except OSError, e:
+            print('Error: {0}'.format(e))
 
-    print(('Done. Your new project is available at %s' % CONF['basedir']))
+    print('Done. Your new project is available at %s' % CONF['basedir'])

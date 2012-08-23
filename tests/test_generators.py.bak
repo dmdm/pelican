@@ -168,14 +168,14 @@ class TestPageGenerator(unittest.TestCase):
         hidden_pages = self.distill_pages(generator.hidden_pages)
 
         pages_expected = [
-            ['This is a test page', 'published', 'page'],
-            ['This is a markdown test page', 'published', 'page'],
-            ['This is a test page with a preset template', 'published', 'custom']
+            [u'This is a test page', 'published', 'page'],
+            [u'This is a markdown test page', 'published', 'page'],
+            [u'This is a test page with a preset template', 'published', 'custom']
         ]
         hidden_pages_expected = [
-            ['This is a test hidden page', 'hidden', 'page'],
-            ['This is a markdown test hidden page', 'hidden', 'page'],
-            ['This is a test hidden page with a custom template', 'hidden', 'custom']
+            [u'This is a test hidden page', 'hidden', 'page'],
+            [u'This is a markdown test hidden page', 'hidden', 'page'],
+            [u'This is a test hidden page with a custom template', 'hidden', 'custom']
         ]
 
         self.assertItemsEqual(pages_expected,pages)

@@ -7,7 +7,7 @@ import os
 import subprocess
 import re
 import sys
-import io
+import cStringIO
 
 from functools import wraps
 from contextlib import contextmanager
@@ -98,7 +98,7 @@ def mute(returns_output=False):
         def wrapper(*args, **kwargs):
 
             saved_stdout = sys.stdout
-            sys.stdout = io.StringIO()
+            sys.stdout = cStringIO.StringIO()
 
             try:
                 out = func(*args, **kwargs)

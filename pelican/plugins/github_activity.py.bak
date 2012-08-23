@@ -65,7 +65,7 @@ def fetch_github_activity(gen, metadata):
         template
     """
 
-    if 'GITHUB_ACTIVITY_FEED' in list(gen.settings.keys()):
+    if 'GITHUB_ACTIVITY_FEED' in gen.settings.keys():
         gen.context['github_activity'] = gen.plugin_instance.fetch()
 
 

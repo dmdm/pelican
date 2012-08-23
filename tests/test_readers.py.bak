@@ -21,17 +21,17 @@ class RstReaderTest(unittest.TestCase):
         content, metadata = reader.read(_filename('article_with_metadata.rst'))
         expected = {
             'category': 'yeah',
-            'author': 'Alexis Métaireau',
+            'author': u'Alexis Métaireau',
             'title': 'This is a super article !',
-            'summary': '<p class="first last">Multi-line metadata should be'\
-                       ' supported\nas well as <strong>inline'\
-                       ' markup</strong>.</p>\n',
+            'summary': u'<p class="first last">Multi-line metadata should be'\
+                       u' supported\nas well as <strong>inline'\
+                       u' markup</strong>.</p>\n',
             'date': datetime.datetime(2010, 12, 2, 10, 14),
             'tags': ['foo', 'bar', 'foobar'],
             'custom_field': 'http://notmyidea.org',
         }
 
-        for key, value in list(expected.items()):
+        for key, value in expected.items():
             self.assertEquals(value, metadata[key], key)
 
     def test_article_metadata_key_lowercase(self):
@@ -57,7 +57,7 @@ class RstReaderTest(unittest.TestCase):
             # otherwise, typogrify should be applied
             content, _ = readers.read_file(_filename('article.rst'),
                                            settings={'TYPOGRIFY': True})
-            expected = "<p>This is some content. With some stuff to&nbsp;"\
+            expected = u"<p>This is some content. With some stuff to&nbsp;"\
                        "&#8220;typogrify&#8221;.</p>\n<p>Now with added "\
                        'support for <abbr title="three letter acronym">'\
                        '<span class="caps">TLA</span></abbr>.</p>\n'

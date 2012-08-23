@@ -15,8 +15,8 @@ Add LICENSE to your settings file to define default license.
 """
 
 def add_license(generator, metadata):
-    if 'license' not in list(metadata.keys())\
-        and 'LICENSE' in list(generator.settings.keys()):
+    if 'license' not in metadata.keys()\
+        and 'LICENSE' in generator.settings.keys():
             metadata['license'] = generator.settings['LICENSE']
 
 def register():

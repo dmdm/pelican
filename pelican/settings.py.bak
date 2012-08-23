@@ -50,8 +50,8 @@ _DEFAULT_CONFIG = {'PATH': '.',
                    'CATEGORY_SAVE_AS': 'category/{slug}.html',
                    'TAG_URL': 'tag/{slug}.html',
                    'TAG_SAVE_AS': 'tag/{slug}.html',
-                   'AUTHOR_URL': 'author/{slug}.html',
-                   'AUTHOR_SAVE_AS': 'author/{slug}.html',
+                   'AUTHOR_URL': u'author/{slug}.html',
+                   'AUTHOR_SAVE_AS': u'author/{slug}.html',
                    'RELATIVE_URLS': True,
                    'DEFAULT_LANG': 'en',
                    'TAG_CLOUD_STEPS': 4,
@@ -128,7 +128,7 @@ def configure_settings(settings, default_settings=None, filename=None):
     # if locales is not a list, make it one
     locales = settings['LOCALE']
 
-    if isinstance(locales, str):
+    if isinstance(locales, basestring):
         locales = [locales]
 
     # try to set the different locales, fallback on the default.

@@ -47,12 +47,12 @@ def slugify(value):
     Took from django sources.
     """
     value = Markup(value).striptags()
-    if type(value) == str:
+    if type(value) == unicode:
         import unicodedata
         from unidecode import unidecode
-        value = str(unidecode(value))
+        value = unicode(unidecode(value))
         value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = str(re.sub('[^\w\s-]', '', value).strip().lower())
+    value = unicode(re.sub('[^\w\s-]', '', value).strip().lower())
     return re.sub('[-\s]+', '-', value)
 
 
@@ -100,13 +100,13 @@ def clean_output_dir(path):
             try:
                 shutil.rmtree(file)
                 logger.debug("Deleted directory %s" % file)
-            except Exception as e:
+            except Exception, e:
                 logger.error("Unable to delete directory %s; %e" % file, e)
         elif os.path.isfile(file) or os.path.islink(file):
             try:
                 os.remove(file)
                 logger.debug("Deleted file/link %s" % file)
-            except Exception as e:
+            except Exception, e:
                 logger.error("Unable to delete file %s; %e" % file, e)
         else:
             logger.error("Unable to delete %s, file type unknown" % file)
@@ -128,7 +128,7 @@ def truncate_html_words(s, num, end_text='...'):
     """
     length = int(num)
     if length <= 0:
-        return ''
+        return u''
     html4_singlets = ('br', 'col', 'link', 'base', 'img', 'param', 'area',
                       'hr', 'input')
 
@@ -202,10 +202,10 @@ def process_translations(content_list):
     for slug, items in grouped_by_slugs:
         items = list(items)
         # find items with default language
-        default_lang_items = list(filter(attrgetter('in_default_lang'), items))
+        default_lang_items = filter(attrgetter('in_default_lang'), items)
         len_ = len(default_lang_items)
         if len_ > 1:
-            logger.warning('there are %s variants of "%s"' % (len_, slug))
+            logger.warning(u'there are %s variants of "%s"' % (len_, slug))
             for x in default_lang_items:
                 logger.warning('    %s' % x.filename)
         elif len_ == 0:
@@ -217,9 +217,12 @@ def process_translations(content_list):
                 + 'content'
             logger.warning(msg)
         index.extend(default_lang_items)
-        translations.extend([x for x in items if x not in default_lang_items])
+        translations.extend(filter(
+            lambda x: x not in default_lang_items,
+            items
+        ))
         for a in items:
-            a.translations = [x for x in items if x != a]
+            a.translations = filter(lambda x: x != a, items)
     return index, translations
 
 

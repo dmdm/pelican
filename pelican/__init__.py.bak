@@ -73,7 +73,7 @@ class Pelican(object):
         self.plugins = self.settings['PLUGINS']
         for plugin in self.plugins:
             # if it's a string, then import it
-            if isinstance(plugin, str):
+            if isinstance(plugin, basestring):
                 logger.debug("Loading plugin `{0}' ...".format(plugin))
                 plugin = __import__(plugin, globals(), locals(), 'module')
 
@@ -247,7 +247,7 @@ def get_instance(args):
     settings = read_settings(args.settings)
 
     cls = settings.get('PELICAN_CLASS')
-    if isinstance(cls, str):
+    if isinstance(cls, basestring):
         module, cls_name = cls.rsplit('.', 1)
         module = __import__(module)
         cls = getattr(module, cls_name)
@@ -287,15 +287,15 @@ def main():
                 except KeyboardInterrupt:
                     logger.warning("Keyboard interrupt, quitting.")
                     break
-                except Exception as e:
+                except Exception, e:
                     logger.warning(
                         "Caught exception \"{}\". Reloading.".format(e)
                     )
                     continue
         else:
             pelican.run()
-    except Exception as e:
-        logger.critical(str(e))
+    except Exception, e:
+        logger.critical(unicode(e))
 
         if (args.verbosity == logging.DEBUG):
             raise
