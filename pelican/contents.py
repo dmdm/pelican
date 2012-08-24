@@ -88,7 +88,7 @@ class Page(object):
         if hasattr(self, 'date'):
             # Py3k: strftime() needs str as 1st arg, not bytes
             encoded_date = self.date.strftime(
-                    str(self.date_format.encode('ascii', 'xmlcharrefreplace')))
+                    self.date_format.encode('ascii', 'xmlcharrefreplace').decode('ascii'))
 
             # Py3k: strftime() returns str, which already is unicode, and is
             #       missing decode().
