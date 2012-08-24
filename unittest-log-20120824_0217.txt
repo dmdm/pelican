@@ -1,0 +1,104 @@
+sh: 1: pandoc: not found
+Removed extraneous trailing slash from SITEURL.
+No timezone information specified in the settings. Assuming your timezone is UTC for feed generation. Check http://docs.notmyidea.org/alexis/pelican/settings.html#timezone for more information
+No timezone information specified in the settings. Assuming your timezone is UTC for feed generation. Check http://docs.notmyidea.org/alexis/pelican/settings.html#timezone for more information
+No timezone information specified in the settings. Assuming your timezone is UTC for feed generation. Check http://docs.notmyidea.org/alexis/pelican/settings.html#timezone for more information
+....No timezone information specified in the settings. Assuming your timezone is UTC for feed generation. Check http://docs.notmyidea.org/alexis/pelican/settings.html#timezone for more information
+.ss....Author of `Un titre' unknown, assuming that his name is `b'dm''
+Author of `A title' unknown, assuming that his name is `b'dm''
+.....Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_md_extension.md' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_uppercase_metadata.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_without_category.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_template.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/TestCategory/article_with_category.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/TestCategory/article_without_category.rst' unknown, assuming that his name is `b'dm''
+there are 2 variants of "this-is-a-super-article"
+    /home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_uppercase_metadata.rst
+    /home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_metadata.rst
+there are 2 variants of "this-is-an-article-without-category"
+    /home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_without_category.rst
+    /home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/TestCategory/article_without_category.rst
+F.Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_md_extension.md' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_uppercase_metadata.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_without_category.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_template.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/TestCategory/article_with_category.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/TestCategory/article_without_category.rst' unknown, assuming that his name is `b'dm''
+there are 2 variants of "this-is-a-super-article"
+    /home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_uppercase_metadata.rst
+    /home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_with_metadata.rst
+there are 2 variants of "this-is-an-article-without-category"
+    /home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/article_without_category.rst
+    /home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/content/TestCategory/article_without_category.rst
+..Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/TestPages/page_with_template.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/TestPages/bad_page.rst' unknown, assuming that his name is `b'dm''
+Unknown status b'invalid' for file '/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/TestPages/bad_page.rst', skipping it.
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/TestPages/page_markdown.md' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/TestPages/hidden_page.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/TestPages/page.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/TestPages/hidden_page_with_template.rst' unknown, assuming that his name is `b'dm''
+Author of `/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/TestPages/hidden_page_markdown.md' unknown, assuming that his name is `b'dm''
+.........Author of `foobar' unknown, assuming that his name is `b'dm''
+.........Author of `foobar' unknown, assuming that his name is `b'dm''
+......sF
+======================================================================
+FAIL: test_generate_context (tests.test_generators.TestArticlesGenerator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/test_generators.py", line 88, in test_generate_context
+    'yeah'])
+AssertionError: Lists differ: ['Default', 'Default', 'Defaul... != ['Default', 'TestCategory', 'Y...
+
+First differing element 1:
+Default
+TestCategory
+
+First list contains 3 additional elements.
+First extra element 5:
+test
+
++ ['Default', 'TestCategory', 'Yeah', 'test', 'yeah']
+- ['Default',
+-  'Default',
+-  'Default',
+-  'TestCategory',
+-  'Yeah',
+-  'test',
+-  'yeah',
+-  'yeah']
+
+======================================================================
+FAIL: test_custom_generation_works (tests.test_pelican.TestPelican)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/dm/myprojects/pelican3.0-pyk3-devel-env/src/pelican/tests/test_pelican.py", line 92, in test_custom_generation_works
+    self.assertEqual(diff.diff_files, [], msg="some generated " \
+AssertionError: Lists differ: ['categories.html', 'article-1... != []
+
+First list contains 14 additional elements.
+First extra element 0:
+categories.html
+
++ []
+- ['categories.html',
+-  'article-1.html',
+-  'index2.html',
+-  'oh-yeah-fr.html',
+-  'this-is-a-super-article.html',
+-  'second-article.html',
+-  'oh-yeah.html',
+-  'archives.html',
+-  'unbelievable.html',
+-  'a-markdown-powered-article.html',
+-  'article-3.html',
+-  'article-2.html',
+-  'index.html',
+-  'second-article-fr.html'] : some generated files differ from the expected functional tests output.
+This is probably because the HTML generated files changed. If these changes are normal, please refer to docs/contribute.rst to update the expected output of the functional tests.
+
+----------------------------------------------------------------------
+Ran 46 tests in 0.572s
+
+FAILED (failures=2, skipped=3)
