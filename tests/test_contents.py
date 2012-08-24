@@ -106,8 +106,7 @@ class TestPage(unittest.TestCase):
         page = Page(**page_kwargs)
 
         self.assertEqual(page.locale_date,
-            str(dt.strftime(_DEFAULT_CONFIG['DEFAULT_DATE_FORMAT']),
-                                'utf-8'))
+            dt.strftime(_DEFAULT_CONFIG['DEFAULT_DATE_FORMAT']))
 
         page_kwargs['settings'] = dict([(x, _DEFAULT_CONFIG[x]) for x in
                                         _DEFAULT_CONFIG])
