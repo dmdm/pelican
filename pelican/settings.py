@@ -81,7 +81,7 @@ def read_settings(filename=None):
     if filename:
         local_settings = get_settings_from_file(filename)
     else:
-        local_settings = _DEFAULT_CONFIG
+        local_settings = _DEFAULT_CONFIG.copy()
     configured_settings = configure_settings(local_settings, None, filename)
     return configured_settings
 
@@ -151,7 +151,7 @@ def configure_settings(settings, default_settings=None, filename=None):
             settings['SITEURL'] = siteurl[:-1]
             logger.warn("Removed extraneous trailing slash from SITEURL.")
         # If SITEURL is defined but FEED_DOMAIN isn't, set FEED_DOMAIN = SITEURL
-        if not 'FEED_DOMAIN' in settings:
+        if not 'FEED_DOMAIN' in settings and len(settings['SITEURL']) > 0:
             settings['FEED_DOMAIN'] = settings['SITEURL']
 
     # Warn if feeds are generated with both SITEURL & FEED_DOMAIN undefined

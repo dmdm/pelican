@@ -30,6 +30,7 @@ class TestSettingsConfiguration(unittest.TestCase):
 
     def test_read_empty_settings(self):
         """providing no file should return the default values."""
+        self.maxDiff = None
         settings = read_settings(None)
         self.assertDictEqual(settings, _DEFAULT_CONFIG)
 
