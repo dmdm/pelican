@@ -37,6 +37,18 @@ class TestPelican(unittest.TestCase):
         rmtree(self.temp_path)
         locale.setlocale(locale.LC_ALL, self.old_locale)
 
+    def assertFilesEqual(self, diff):
+        msg = "some generated files differ from the expected functional " \
+              "tests output.\n" \
+              "This is probably because the HTML generated files " \
+              "changed. If these changes are normal, please refer " \
+              "to docs/contribute.rst to update the expected " \
+              "output of the functional tests."
+
+        self.assertEqual(diff.left_only, [], msg=msg)
+        self.assertEqual(diff.right_only, [], msg=msg)
+        self.assertEqual(diff.diff_files, [], msg=msg)
+
     @unittest.skip("Test failing")
     def test_basic_generation_works(self):
         # when running pelican without settings, it should pick up the default
@@ -45,56 +57,23 @@ class TestPelican(unittest.TestCase):
         with patch("pelican.contents.getenv") as mock_getenv:
             # force getenv('USER') to always return the same value
             mock_getenv.return_value = "Dummy Author"
-            pelican = Pelican(path=INPUT_PATH, output_path=self.temp_path)
+            settings = read_settings(filename=None, override={
+                'PATH': INPUT_PATH,
+                'OUTPUT_PATH': self.temp_path,
+                })
+            pelican = Pelican(settings=settings)
             pelican.run()
             diff = dircmp(
                     self.temp_path, os.sep.join((OUTPUT_PATH, "basic")))
-            self.assertEqual(diff.left_only, [], msg="some generated " \
-                    "files are absent from the expected functional " \
-                    "tests output.\n" \
-                    "This is probably because the HTML generated files " \
-                    "changed. If these changes are normal, please refer " \
-                    "to docs/contribute.rst to update the expected " \
-                    "output of the functional tests.")
-            self.assertEqual(diff.right_only, [], msg="some files from " \
-                    "the expected functional tests output are absent " \
-                    "from the current output.\n" \
-                    "This is probably because the HTML generated files " \
-                    "changed. If these changes are normal, please refer " \
-                    "to docs/contribute.rst to update the expected " \
-                    "output of the functional tests.")
-            self.assertEqual(diff.diff_files, [], msg="some generated " \
-                    "files differ from the expected functional tests " \
-                    "output.\n" \
-                    "This is probably because the HTML generated files " \
-                    "changed. If these changes are normal, please refer " \
-                    "to docs/contribute.rst to update the expected " \
-                    "output of the functional tests.")
+            self.assertFilesEqual(diff)
 
     def test_custom_generation_works(self):
         # the same thing with a specified set of settings should work
-        pelican = Pelican(path=INPUT_PATH, output_path=self.temp_path,
-                            settings=read_settings(SAMPLE_CONFIG))
+        settings = read_settings(filename=SAMPLE_CONFIG, override={
+            'PATH': INPUT_PATH,
+            'OUTPUT_PATH': self.temp_path,
+            })
+        pelican = Pelican(settings=settings)
         pelican.run()
         diff = dircmp(self.temp_path, os.sep.join((OUTPUT_PATH, "custom")))
-        self.assertEqual(diff.left_only, [], msg="some generated " \
-                "files are absent from the expected functional " \
-                "tests output.\n" \
-                "This is probably because the HTML generated files " \
-                "changed. If these changes are normal, please refer " \
-                "to docs/contribute.rst to update the expected " \
-                "output of the functional tests.")
-        self.assertEqual(diff.right_only, [], msg="some files from " \
-                "the expected functional tests output are absent " \
-                "from the current output.\n" \
-                "This is probably because the HTML generated files " \
-                "changed. If these changes are normal, please refer " \
-                "to docs/contribute.rst to update the expected " \
-                "output of the functional tests.")
-        self.assertEqual(diff.diff_files, [], msg="some generated " \
-                "files differ from the expected functional tests " \
-                "output.\n" \
-                "This is probably because the HTML generated files " \
-                "changed. If these changes are normal, please refer " \
-                "to docs/contribute.rst to update the expected " \
-                "output of the functional tests.")
+        self.assertFilesEqual(diff)

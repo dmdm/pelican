@@ -70,12 +70,14 @@ class TestArticlesGenerator(unittest.TestCase):
             ['Article title', 'published', 'Default', 'article'],
             ['Article with template', 'published', 'Default', 'custom'],
             ['Test md File', 'published', 'test', 'article'],
+            ['Test Markdown extensions', 'published', u'Default', 'article'],
             ['This is a super article !', 'published', 'Yeah', 'article'],
             ['This is an article with category !', 'published', 'yeah', 'article'],
             ['This is an article without category !', 'published', 'Default', 'article'],
             ['This is an article without category !', 'published', 'TestCategory', 'article'],
             ['This is a super article !', 'published', 'yeah', 'article']
         ]
+        self.maxDiff = None
         self.assertItemsEqual(articles_expected, articles)
 
     def test_generate_categories(self):

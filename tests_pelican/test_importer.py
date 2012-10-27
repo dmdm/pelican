@@ -4,25 +4,24 @@ from __future__ import unicode_literals, print_function
 import os
 
 from pelican.tools.pelican_import import wp2fields, fields2pelican
-from .support import unittest, temporary_folder, mute
+from .support import unittest, temporary_folder, mute, skipIfNoExecutable
 
 CUR_DIR = os.path.dirname(__file__)
 WORDPRESS_XML_SAMPLE = os.path.join(CUR_DIR, 'content', 'wordpressexport.xml')
 
-PANDOC = os.system('pandoc --version') == 0
 try:
     from bs4 import BeautifulSoup
 except ImportError:
     BeautifulSoup = False  # NOQA
 
 
+@skipIfNoExecutable(['pandoc', '--version'])
+@unittest.skipUnless(BeautifulSoup, 'Needs BeautifulSoup module')
 class TestWordpressXmlImporter(unittest.TestCase):
 
     def setUp(self):
         self.posts = wp2fields(WORDPRESS_XML_SAMPLE)
 
-    @unittest.skipUnless(PANDOC and BeautifulSoup,
-                         'Needs Pandoc and BeautifulSoup')
     def test_ignore_empty_posts(self):
 
         posts = list(self.posts)
@@ -30,8 +29,6 @@ class TestWordpressXmlImporter(unittest.TestCase):
         for title, content, fname, date, author, categ, tags, format in posts:
             self.assertTrue(title.strip())
 
-    @unittest.skipUnless(PANDOC and BeautifulSoup,
-                         'Needs Pandoc and BeautifulSoup')
     def test_can_toggle_raw_html_code_parsing(self):
 
         posts = list(self.posts)

@@ -7,16 +7,17 @@ import six
 import os
 import string
 import argparse
+import sys
+import codecs
 
 from pelican import __version__
 
-_TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), \
+_TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "templates")
 
-
 CONF = {
-    'pelican' : 'pelican',
-    'pelicanopts' : '',
+    'pelican': 'pelican',
+    'pelicanopts': '',
     'basedir': '.',
     'ftp_host': 'localhost',
     'ftp_user': 'anonymous',
@@ -25,8 +26,8 @@ CONF = {
     'ssh_port': 22,
     'ssh_user': 'root',
     'ssh_target_dir': '/var/www',
-    'dropbox_dir' : '~/Dropbox/Public/',
-    'default_pagination' : 10,
+    'dropbox_dir': '~/Dropbox/Public/',
+    'default_pagination': 10,
     'siteurl': '',
     'lang': 'en'
 }
@@ -43,13 +44,23 @@ if six.PY3:
 else:
     str_compat = unicode
 
-def get_template(name):
+def decoding_strings(f):
+    def wrapper(*args, **kwargs):
+        out = f(*args, **kwargs)
+        if isinstance(out, basestring):
+            # todo: make encoding configurable?
+            return out.decode(sys.stdin.encoding)
+        return out
+    return wrapper
+
+
+def get_template(name, as_encoding='utf-8'):
     template = os.path.join(_TEMPLATES_DIR, "{0}.in".format(name))
 
     if not os.path.isfile(template):
         raise RuntimeError("Cannot open {0}".format(template))
 
-    with open(template, 'r') as fd:
+    with codecs.open(template, 'r', as_encoding) as fd:
         line = fd.readline()
         while line:
             yield line
@@ -78,7 +89,7 @@ def ask(question, answer=str_compat, default=None, l=None):
                 if l and len(r) != l:
                     print('You must enter a {0} letters long string'.format(l))
                 else:
-                   break
+                    break
 
         return r
 
@@ -149,14 +160,16 @@ def main():
 
 This script will help you create a new Pelican-based website.
 
-Please answer the following questions so this script can generate the files needed by Pelican.
+Please answer the following questions so this script can generate the files
+needed by Pelican.
 
     '''.format(v=__version__))
 
     project = os.path.join(os.environ.get('VIRTUAL_ENV', '.'), '.project')
     if os.path.isfile(project):
         CONF['basedir'] = open(project, 'r').read().rstrip("\n")
-        print('Using project associated with current virtual environment. Will save to:\n%s\n' % CONF['basedir'])
+        print('Using project associated with current virtual environment.'
+              'Will save to:\n%s\n' % CONF['basedir'])
     else:
         CONF['basedir'] = os.path.abspath(ask('Where do you want to create your new web site?', answer=str_compat, default=args.path))
 
@@ -201,16 +214,20 @@ Please answer the following questions so this script can generate the files need
         print('Error: {0}'.format(e))
 
     try:
-        with open(os.path.join(CONF['basedir'], 'pelicanconf.py'), 'w') as fd:
+        with codecs.open(os.path.join(CONF['basedir'], 'pelicanconf.py'), 'w', 'utf-8') as fd:
+            conf_python = dict()
+            for key, value in CONF.iteritems():
+                conf_python[key] = repr(value)
+
             for line in get_template('pelicanconf.py'):
                 template = string.Template(line)
-                fd.write(template.safe_substitute(CONF))
+                fd.write(template.safe_substitute(conf_python))
             fd.close()
     except OSError as e:
         print('Error: {0}'.format(e))
 
     try:
-        with open(os.path.join(CONF['basedir'], 'publishconf.py'), 'w') as fd:
+        with codecs.open(os.path.join(CONF['basedir'], 'publishconf.py'), 'w', 'utf-8') as fd:
             for line in get_template('publishconf.py'):
                 template = string.Template(line)
                 fd.write(template.safe_substitute(CONF))
@@ -220,7 +237,7 @@ Please answer the following questions so this script can generate the files need
 
     if mkfile:
         try:
-            with open(os.path.join(CONF['basedir'], 'Makefile'), 'w') as fd:
+            with codecs.open(os.path.join(CONF['basedir'], 'Makefile'), 'w', 'utf-8') as fd:
                 for line in get_template('Makefile'):
                     template = string.Template(line)
                     fd.write(template.safe_substitute(CONF))
@@ -229,11 +246,16 @@ Please answer the following questions so this script can generate the files need
             print('Error: {0}'.format(e))
 
     if develop:
+        conf_shell = dict()
+        for key, value in CONF.iteritems():
+            if isinstance(value, basestring) and ' ' in value:
+                value = '"' + value.replace('"', '\\"') + '"'
+            conf_shell[key] = value
         try:
-            with open(os.path.join(CONF['basedir'], 'develop_server.sh'), 'w') as fd:
+            with codecs.open(os.path.join(CONF['basedir'], 'develop_server.sh'), 'w', 'utf-8') as fd:
                 for line in get_template('develop_server.sh'):
                     template = string.Template(line)
-                    fd.write(template.safe_substitute(CONF))
+                    fd.write(template.safe_substitute(conf_shell))
                 fd.close()
                 os.chmod((os.path.join(CONF['basedir'], 'develop_server.sh')),
                     0o755 if six.PY3 else 0755)
