@@ -540,7 +540,7 @@ class SourceFileGenerator(Generator):
         copy('', obj.filename, dest)
 
     def generate_output(self, writer=None):
-        logger.info(u' Generating source files...')
+        logger.info(' Generating source files...')
         for object in chain(self.context['articles'], self.context['pages']):
             self._create_source(object, self.output_path)
 

@@ -140,7 +140,7 @@ def clean_output_dir(path):
     if not os.path.isdir(path):
         try:
             os.remove(path)
-        except Exception, e:
+        except Exception as e:
             logger.error("Unable to delete file %s; %e" % path, e)
         return
 

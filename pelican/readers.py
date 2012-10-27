@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
+import six
 
 try:
     import docutils
@@ -132,7 +133,7 @@ class MarkdownReader(Reader):
     def read(self, filename):
         """Parse content and metadata of markdown files"""
         markdown_extensions = self.settings.get('MARKDOWN_EXTENSIONS', [])
-        if isinstance(markdown_extensions, (str, unicode)):
+        if isinstance(markdown_extensions, six.text_type):
             markdown_extensions = [m.strip() for m in
                                    markdown_extensions.split(',')]
         text = pelican_open(filename)

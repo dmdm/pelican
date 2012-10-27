@@ -70,7 +70,7 @@ class TestArticlesGenerator(unittest.TestCase):
             ['Article title', 'published', 'Default', 'article'],
             ['Article with template', 'published', 'Default', 'custom'],
             ['Test md File', 'published', 'test', 'article'],
-            ['Test Markdown extensions', 'published', u'Default', 'article'],
+            ['Test Markdown extensions', 'published', 'Default', 'article'],
             ['This is a super article !', 'published', 'Yeah', 'article'],
             ['This is an article with category !', 'published', 'yeah', 'article'],
             ['This is an article without category !', 'published', 'Default', 'article'],
