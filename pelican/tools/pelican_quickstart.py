@@ -47,7 +47,7 @@ else:
 def decoding_strings(f):
     def wrapper(*args, **kwargs):
         out = f(*args, **kwargs)
-        if isinstance(out, basestring):
+        if isinstance(out, six.string_types):
             # todo: make encoding configurable?
             return out.decode(sys.stdin.encoding)
         return out
@@ -216,7 +216,7 @@ needed by Pelican.
     try:
         with codecs.open(os.path.join(CONF['basedir'], 'pelicanconf.py'), 'w', 'utf-8') as fd:
             conf_python = dict()
-            for key, value in CONF.iteritems():
+            for key, value in CONF.items():
                 conf_python[key] = repr(value)
 
             for line in get_template('pelicanconf.py'):
@@ -247,8 +247,8 @@ needed by Pelican.
 
     if develop:
         conf_shell = dict()
-        for key, value in CONF.iteritems():
-            if isinstance(value, basestring) and ' ' in value:
+        for key, value in CONF.items():
+            if isinstance(value, six.string_types) and ' ' in value:
                 value = '"' + value.replace('"', '\\"') + '"'
             conf_shell[key] = value
         try:
@@ -257,8 +257,7 @@ needed by Pelican.
                     template = string.Template(line)
                     fd.write(template.safe_substitute(conf_shell))
                 fd.close()
-                os.chmod((os.path.join(CONF['basedir'], 'develop_server.sh')),
-                    0o755 if six.PY3 else 0755)
+                os.chmod((os.path.join(CONF['basedir'], 'develop_server.sh')), 493) # mode 0o755
         except OSError as e:
             print('Error: {0}'.format(e))
 
