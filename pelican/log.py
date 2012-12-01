@@ -32,7 +32,7 @@ def ansi(color, text):
 
 class ANSIFormatter(Formatter):
     """
-    Convert a `logging.LogReport' object into colored text, using ANSI escape sequences.
+    Convert a `logging.LogRecord' object into colored text, using ANSI escape sequences.
     """
     ## colors:
 
@@ -54,7 +54,7 @@ class ANSIFormatter(Formatter):
 
 class TextFormatter(Formatter):
     """
-    Convert a `logging.LogReport' object into text.
+    Convert a `logging.LogRecord' object into text.
     """
 
     def format(self, record):
