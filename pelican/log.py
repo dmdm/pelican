@@ -38,15 +38,15 @@ class ANSIFormatter(Formatter):
 
     def format(self, record):
         msg = str(record.msg)
-        if record.levelname is 'INFO':
+        if record.levelname == 'INFO':
             return ansi('cyan', '-> ') + msg
-        elif record.levelname is 'WARNING':
+        elif record.levelname == 'WARNING':
             return ansi('yellow', record.levelname) + ': ' + msg
-        elif record.levelname is 'ERROR':
+        elif record.levelname == 'ERROR':
             return ansi('red', record.levelname) + ': ' + msg
-        elif record.levelname is 'CRITICAL':
+        elif record.levelname == 'CRITICAL':
             return ansi('bgred', record.levelname) + ': ' + msg
-        elif record.levelname is 'DEBUG':
+        elif record.levelname == 'DEBUG':
             return ansi('bggrey', record.levelname) + ': ' + msg
         else:
             return ansi('white', record.levelname) + ': ' + msg
@@ -58,7 +58,7 @@ class TextFormatter(Formatter):
     """
 
     def format(self, record):
-        if not record.levelname or record.levelname is 'INFO':
+        if not record.levelname or record.levelname == 'INFO':
             return record.msg
         else:
             return record.levelname + ': ' + record.msg
