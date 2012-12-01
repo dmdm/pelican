@@ -49,8 +49,7 @@ name to a byte string, in Python 3 this should do nothing, because the locale na
 already had been unicode.
 
 Octal literals -- love them --, in Python 2 you write them like "0755", this is
-invalid for Python 3 where it must be "0o755". Changed them into idiom
-"0o755 if six.PY3 else 0755".
+invalid for Python 3 where it must be "0o755". Changed them into decimal number.
 
 
 Potential issues:
