@@ -37,18 +37,19 @@ class ANSIFormatter(Formatter):
     ## colors:
 
     def format(self, record):
+        msg = str(record.msg)
         if record.levelname is 'INFO':
-            return ansi('cyan', '-> ') + record.msg
+            return ansi('cyan', '-> ') + msg
         elif record.levelname is 'WARNING':
-            return ansi('yellow', record.levelname) + ': ' + record.msg
+            return ansi('yellow', record.levelname) + ': ' + msg
         elif record.levelname is 'ERROR':
-            return ansi('red', record.levelname) + ': ' + record.msg
+            return ansi('red', record.levelname) + ': ' + msg
         elif record.levelname is 'CRITICAL':
-            return ansi('bgred', record.levelname) + ': ' + record.msg
+            return ansi('bgred', record.levelname) + ': ' + msg
         elif record.levelname is 'DEBUG':
-            return ansi('bggrey', record.levelname) + ': ' + record.msg
+            return ansi('bggrey', record.levelname) + ': ' + msg
         else:
-            return ansi('white', record.levelname) + ': ' + record.msg
+            return ansi('white', record.levelname) + ': ' + msg
 
 
 class TextFormatter(Formatter):
