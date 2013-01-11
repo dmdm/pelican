@@ -100,16 +100,16 @@ request if you need them!
 List of plugins
 ===============
 
-The following plugins are currently included with Pelican under ``pelican.plugins``:
+The following plugins are currently included with Pelican:
 
-* `Asset management`_
-* `GitHub activity`_
-* `Global license`_
-* `Gravatar`_
-* `Gzip cache`_
-* `HTML tags for reStructuredText`_
-* `Related posts`_
-* `Sitemap`_
+* `Asset management`_ ``pelican.plugins.assets``
+* `GitHub activity`_ ``pelican.plugins.github_activity``
+* `Global license`_ ``pelican.plugins.global_license``
+* `Gravatar`_ ``pelican.plugins.gravatar``
+* `Gzip cache`_ ``pelican.plugins.gzip_cache``
+* `HTML tags for reStructuredText`_ ``pelican.plugins.html_rst_directive``
+* `Related posts`_ ``pelican.plugins.related_posts``
+* `Sitemap`_ ``pelican.plugins.sitemap``
 
 Ideas for plugins that haven't been written yet:
 
@@ -130,9 +130,9 @@ CSS and JS files. The module must first be installed::
 The Webassets module allows you to perform a number of useful asset management
 functions, including:
 
-* CSS minifier (``cssmin``, ``yuicompressor``, ...)
+* CSS minifier (``cssmin``, ``yui_css``, ...)
 * CSS compiler (``less``, ``sass``, ...)
-* JS minifier (``uglifyjs``, ``yuicompressor``, ``closure``, ...)
+* JS minifier (``uglifyjs``, ``yui_js``, ``closure``, ...)
 
 Others filters include gzip compression, integration of images in CSS via data
 URIs, and more. Webassets can also append a version identifier to your asset
