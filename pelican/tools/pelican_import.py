@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals, print_function
 import argparse
-from HTMLParser import HTMLParser
+try:
+    # py3k import
+    from html.parser import HTMLParser
+except ImportError:
+    # py2 import
+    from HTMLParser import HTMLParser  # NOQA
 import os
 import subprocess
 import sys
@@ -15,14 +22,14 @@ from pelican.utils import slugify
 def wp2fields(xml):
     """Opens a wordpress XML file, and yield pelican fields"""
     try:
-        from BeautifulSoup import BeautifulStoneSoup
+        from bs4 import BeautifulSoup
     except ImportError:
         error = ('Missing dependency '
-                 '"BeautifulSoup" required to import Wordpress XML files.')
+                 '"BeautifulSoup4" and "lxml" required to import Wordpress XML files.')
         sys.exit(error)
 
     xmlfile = open(xml, encoding='utf-8').read()
-    soup = BeautifulStoneSoup(xmlfile)
+    soup = BeautifulSoup(xmlfile, "xml")
     items = soup.rss.channel.findAll('item')
 
     for item in items:
@@ -54,10 +61,10 @@ def wp2fields(xml):
 def dc2fields(file):
     """Opens a Dotclear export file, and yield pelican fields"""
     try:
-        from BeautifulSoup import BeautifulStoneSoup
+        from bs4 import BeautifulSoup
     except ImportError:
         error = ('Missing dependency '
-                 '"BeautifulSoup" required to import Dotclear files.')
+                 '"BeautifulSoup4" and "lxml" required to import Dotclear files.')
         sys.exit(error)
 
 
@@ -142,13 +149,27 @@ def dc2fields(file):
         if len(tag) > 1:
             if int(tag[:1]) == 1:
                 newtag = tag.split('"')[1]
-                tags.append(unicode(BeautifulStoneSoup(newtag,convertEntities=BeautifulStoneSoup.HTML_ENTITIES )))
+                tags.append(
+                    BeautifulSoup(
+                        newtag
+                        , "xml"
+                    )
+                    # bs4 always outputs UTF-8
+                    .decode('utf-8')
+                )
             else:
                 i=1
                 j=1
                 while(i <= int(tag[:1])):
                     newtag = tag.split('"')[j].replace('\\','')
-                    tags.append(unicode(BeautifulStoneSoup(newtag,convertEntities=BeautifulStoneSoup.HTML_ENTITIES )))
+                    tags.append(
+                        BeautifulSoup(
+                            newtag
+                            , "xml"
+                        )
+                        # bs4 always outputs UTF-8
+                        .decode('utf-8')
+                    )
                     i=i+1
                     if j < int(tag[:1])*2:
                         j=j+2
@@ -244,7 +265,7 @@ def fields2pelican(fields, out_markup, output_path, dircat=False, strip_raw=Fals
                 # Replace newlines with paragraphs wrapped with <p> so
                 # HTML is valid before conversion
                 paragraphs = content.splitlines()
-                paragraphs = [u'<p>{0}</p>'.format(p) for p in paragraphs]
+                paragraphs = ['<p>{0}</p>'.format(p) for p in paragraphs]
                 new_content = ''.join(paragraphs)
 
                 fp.write(new_content)
@@ -264,7 +285,7 @@ def fields2pelican(fields, out_markup, output_path, dircat=False, strip_raw=Fals
                 elif rc > 0:
                     error = "Please, check your Pandoc installation."
                     exit(error)
-            except OSError, e:
+            except OSError as e:
                 error = "Pandoc execution failed: %s" % e
                 exit(error)
 
