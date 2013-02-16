@@ -6,9 +6,11 @@ import os
 import re
 import pytz
 import shutil
+import traceback
 import logging
 import errno
 import locale
+import fnmatch
 from collections import defaultdict, Hashable
 from functools import partial
 
@@ -122,6 +124,48 @@ class memoized(object):
       '''Support instance methods.'''
       return partial(self.__call__, obj)
 
+
+def deprecated_attribute(old, new, since=None, remove=None, doc=None):
+    """Attribute deprecation decorator for gentle upgrades
+
+    For example:
+
+        class MyClass (object):
+            @deprecated_attribute(
+                old='abc', new='xyz', since=(3, 2, 0), remove=(4, 1, 3))
+            def abc(): return None
+
+            def __init__(self):
+                xyz = 5
+
+    Note that the decorator needs a dummy method to attach to, but the
+    content of the dummy method is ignored.
+    """
+    def _warn():
+        version = '.'.join(six.text_type(x) for x in since)
+        message = ['{} has been deprecated since {}'.format(old, version)]
+        if remove:
+            version = '.'.join(six.text_type(x) for x in remove)
+            message.append(
+                ' and will be removed by version {}'.format(version))
+        message.append('.  Use {} instead.'.format(new))
+        logger.warning(''.join(message))
+        logger.debug(''.join(
+                six.text_type(x) for x in traceback.format_stack()))
+
+    def fget(self):
+        _warn()
+        return getattr(self, new)
+
+    def fset(self, value):
+        _warn()
+        setattr(self, new, value)
+
+    def decorator(dummy):
+        return property(fget=fget, fset=fset, doc=doc)
+
+    return decorator
+
 def get_date(string):
     """Return a datetime object from a string.
 
@@ -141,10 +185,16 @@ def get_date(string):
     raise ValueError("'%s' is not a valid date" % string)
 
 
-def pelican_open(filename):
+class pelican_open(object):
     """Open a file and return it's content"""
-    return open(filename, encoding='utf-8').read()
+    def __init__(self, filename):
+        self.filename = filename
 
+    def __enter__(self):
+        return open(self.filename, encoding='utf-8').read()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
 
 def slugify(value):
     """
@@ -223,7 +273,7 @@ def clean_output_dir(path):
         try:
             os.remove(path)
         except Exception as e:
-            logger.error("Unable to delete file %s; %e" % path, e)
+            logger.error("Unable to delete file %s; %s" % (path, str(e)))
         return
 
     # remove all the existing content from the output folder
@@ -234,20 +284,21 @@ def clean_output_dir(path):
                 shutil.rmtree(file)
                 logger.debug("Deleted directory %s" % file)
             except Exception as e:
-                logger.error("Unable to delete directory %s; %e" % file, e)
+                logger.error("Unable to delete directory %s; %s" % (
+                        file, str(e)))
         elif os.path.isfile(file) or os.path.islink(file):
             try:
                 os.remove(file)
                 logger.debug("Deleted file/link %s" % file)
             except Exception as e:
-                logger.error("Unable to delete file %s; %e" % file, e)
+                logger.error("Unable to delete file %s; %s" % (file, str(e)))
         else:
             logger.error("Unable to delete %s, file type unknown" % file)
 
 
-def get_relative_path(filename):
-    """Return the relative path from the given filename to the root path."""
-    nslashes = filename.count('/')
+def get_relative_path(path):
+    """Return the relative path from the given path to the root path."""
+    nslashes = path.count('/')
     if nslashes == 0:
         return '.'
     else:
@@ -344,15 +395,16 @@ def process_translations(content_list):
         if len_ > 1:
             logger.warning('there are %s variants of "%s"' % (len_, slug))
             for x in default_lang_items:
-                logger.warning('    %s' % x.filename)
+                logger.warning('    {}'.format(x.source_path))
         elif len_ == 0:
             default_lang_items = items[:1]
 
         if not slug:
-            msg = 'empty slug for %r. ' % default_lang_items[0].filename\
-                + 'You can fix this by adding a title or a slug to your '\
-                + 'content'
-            logger.warning(msg)
+            logger.warning((
+                    'empty slug for {!r}. '
+                    'You can fix this by adding a title or a slug to your '
+                    'content'
+                    ).format(default_lang_items[0].source_path))
         index.extend(default_lang_items)
         translations.extend([x for x in items if x not in default_lang_items])
         for a in items:
@@ -362,8 +414,7 @@ def process_translations(content_list):
 
 LAST_MTIME = 0
 
-
-def files_changed(path, extensions):
+def files_changed(path, extensions, ignores=[]):
     """Return True if the files have changed since the last check"""
 
     def file_times(path):
@@ -371,7 +422,8 @@ def files_changed(path, extensions):
         for root, dirs, files in os.walk(path):
             dirs[:] = [x for x in dirs if x[0] != '.']
             for f in files:
-                if any(f.endswith(ext) for ext in extensions):
+                if any(f.endswith(ext) for ext in extensions) \
+                        and not any(fnmatch.fnmatch(f, ignore) for ignore in ignores):
                     yield os.stat(os.path.join(root, f)).st_mtime
 
     global LAST_MTIME
@@ -388,14 +440,14 @@ def files_changed(path, extensions):
 FILENAMES_MTIMES = defaultdict(int)
 
 
-def file_changed(filename):
-    mtime = os.stat(filename).st_mtime
-    if FILENAMES_MTIMES[filename] == 0:
-        FILENAMES_MTIMES[filename] = mtime
+def file_changed(path):
+    mtime = os.stat(path).st_mtime
+    if FILENAMES_MTIMES[path] == 0:
+        FILENAMES_MTIMES[path] = mtime
         return False
     else:
-        if mtime > FILENAMES_MTIMES[filename]:
-            FILENAMES_MTIMES[filename] = mtime
+        if mtime > FILENAMES_MTIMES[path]:
+            FILENAMES_MTIMES[path] = mtime
             return True
         return False
 
@@ -416,5 +468,5 @@ def mkdir_p(path):
     try:
         os.makedirs(path)
     except OSError as e:
-        if e.errno != errno.EEXIST:
+        if e.errno != errno.EEXIST or not os.path.isdir(path):
             raise

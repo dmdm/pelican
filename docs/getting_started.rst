@@ -61,19 +61,28 @@ perform the same step to install the most recent version.
 Dependencies
 ------------
 
-At this time, Pelican is dependent on the following Python packages:
+At this time, Pelican core is dependent on the following Python packages:
 
-* feedgenerator, to generate the Atom feeds
-* jinja2, for templating support
-* docutils, for supporting reStructuredText as an input format
+* `feedgenerator <http://pypi.python.org/pypi/feedgenerator>`_, to generate the
+  Atom feeds
+* `jinja2 <http://pypi.python.org/pypi/Jinja2>`_, for templating support
+* `pygments <http://pypi.python.org/pypi/Pygments>`_, for syntax highlighting
+* `docutils <http://pypi.python.org/pypi/docutils>`_, for supporting
+  reStructuredText as an input format
+* `pytz <http://pypi.python.org/pypi/pytz>`_, for timezone definitions
+* `blinker <http://pypi.python.org/pypi/blinker>`_, an object-to-object and
+  broadcast signaling system
+* `unidecode <http://pypi.python.org/pypi/Unidecode>`_, for ASCII
+  transliterations of Unicode text
 
 If you're not using Python 2.7, you will also need the ``argparse`` package.
 
 Optionally:
 
-* pygments, for syntax highlighting
-* Markdown, for supporting Markdown as an input format
-* Typogrify, for typographical enhancements
+* `markdown <http://pypi.python.org/pypi/Markdown>`_, for supporting Markdown as
+  an input format
+* `typogrify <http://pypi.python.org/pypi/typogrify>`_, for typographical
+  enhancements
 
 Kickstart a blog
 ================
@@ -181,16 +190,47 @@ syntax for Markdown posts should follow this pattern::
 
     This is the content of my super blog post.
 
-Note that, aside from the title, none of this metadata is mandatory: if the
-date is not specified, Pelican can rely on the file's "mtime" timestamp through
-the ``DEFAULT_DATE`` setting, and the category can be determined by the
-directory in which the file resides. For example, a file located at
-``python/foobar/myfoobar.rst`` will have a category of ``foobar``. If you would
-like to organize your files in other ways where the name of the subfolder would
-not be a good category name, you can set the setting ``USE_FOLDER_AS_CATEGORY``
-to ``False``. If there is no summary metadata for a given post, the
-``SUMMARY_MAX_LENGTH`` setting can be used to specify how many words from the
-beginning of an article are used as the summary.
+Lastly, you can use vanilla HTML (files ending in ``.htm`` and ``.html``). Pelican 
+interprets the HTML in a very straightforward manner, reading meta data out
+of ``meta`` tags, the title out of the ``title`` tag, and the body out of the 
+``body`` tag::
+
+    <html>
+        <head>
+            <title>My super title</title>
+            <meta name="tags" contents="thats, awesome" />
+            <meta name="date" contents="2012-07-09 22:28" />
+            <meta name="category" contents="yeah" />
+            <meta name="author" contents="Alexis Métaireau" />
+            <meta name="summary" contents="Short version for index and feeds" />
+        </head>
+        <body>
+            This is the content of my super blog post.
+        </body>
+    </html>
+
+With HTML, there is one simple exception to the standard metadata.
+``tags`` can be specified either with the ``tags`` metadata, as is standard in 
+Pelican, or with the ``keywords`` metadata, as is standard in HTML. The two can 
+be used interchangeably.
+
+Note that, aside from the title, none of this metadata is mandatory: if the date
+is not specified and DEFAULT_DATE is 'fs', Pelican will rely on the file's 
+"mtime" timestamp, and the category can be determined by the directory in which 
+the file resides. For example, a file located at ``python/foobar/myfoobar.rst`` 
+will have a category of ``foobar``.
+
+Note that, aside from the title and date, none of this metadata is mandatory.
+If the date is not specified and you have ``DEFAULT_DATE`` set, Pelican will
+use that instead, making the ``date`` metadata attribute optional. The category
+can be determined by the directory in which the file resides. For example, a
+file located at ``python/foobar/myfoobar.rst`` will have a category of
+``foobar``. If you would like to organize your files in other ways where the
+name of the subfolder would not be a good category name, you can set the
+setting ``USE_FOLDER_AS_CATEGORY`` to ``False``. If there is no summary
+metadata for a given post, the ``SUMMARY_MAX_LENGTH`` setting can be used to
+specify how many words from the beginning of an article are used as the
+summary.
 
 You can also extract any metadata from the filename through a regular
 expression to be set in the ``FILENAME_METADATA`` setting.
