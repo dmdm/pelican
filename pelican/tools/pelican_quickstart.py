@@ -15,10 +15,15 @@ from pelican import __version__
 _TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "templates")
 
+_GITHUB_PAGES_BRANCHES = {
+    'personal': 'master',
+    'project': 'gh-pages'
+}
+
 CONF = {
     'pelican': 'pelican',
     'pelicanopts': '',
-    'basedir': '.',
+    'basedir': os.curdir,
     'ftp_host': 'localhost',
     'ftp_user': 'anonymous',
     'ftp_target_dir': '/',
@@ -26,7 +31,12 @@ CONF = {
     'ssh_port': 22,
     'ssh_user': 'root',
     'ssh_target_dir': '/var/www',
+    's3_bucket': 'my_s3_bucket',
+    'cloudfiles_username': 'my_rackspace_username',
+    'cloudfiles_api_key': 'my_rackspace_api_key',
+    'cloudfiles_container': 'my_cloudfiles_container',
     'dropbox_dir': '~/Dropbox/Public/',
+    'github_pages_branch': _GITHUB_PAGES_BRANCHES['project'],
     'default_pagination': 10,
     'siteurl': '',
     'lang': 'en'
@@ -36,7 +46,7 @@ def _input_compat(prompt):
     if six.PY3:
         r = input(prompt)
     else:
-        r = raw_input(prompt).decode('utf-8')
+        r = raw_input(prompt)
     return r
 
 if six.PY3:
@@ -47,9 +57,12 @@ else:
 def decoding_strings(f):
     def wrapper(*args, **kwargs):
         out = f(*args, **kwargs)
-        if isinstance(out, six.string_types):
+        if isinstance(out, six.string_types) and not six.PY3:
             # todo: make encoding configurable?
-            return out.decode(sys.stdin.encoding)
+            if six.PY3:
+                return out
+            else:
+                return out.decode(sys.stdin.encoding)
         return out
     return wrapper
 
@@ -146,7 +159,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="A kickstarter for Pelican",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('-p', '--path', default=".",
+    parser.add_argument('-p', '--path', default=os.curdir,
             help="The path to generate the blog into")
     parser.add_argument('-t', '--title', metavar="title",
             help='Set the title of the website')
@@ -166,13 +179,15 @@ needed by Pelican.
 
     '''.format(v=__version__))
 
-    project = os.path.join(os.environ.get('VIRTUAL_ENV', '.'), '.project')
+    project = os.path.join(
+        os.environ.get('VIRTUAL_ENV', os.curdir), '.project')
     if os.path.isfile(project):
         CONF['basedir'] = open(project, 'r').read().rstrip("\n")
         print('Using project associated with current virtual environment.'
               'Will save to:\n%s\n' % CONF['basedir'])
     else:
-        CONF['basedir'] = os.path.abspath(ask('Where do you want to create your new web site?', answer=str_compat, default=args.path))
+        CONF['basedir'] = os.path.abspath(os.path.expanduser(
+            ask('Where do you want to create your new web site?', answer=str_compat, default=args.path)))
 
     CONF['sitename'] = ask('What will be the title of this web site?', answer=str_compat, default=args.title)
     CONF['author'] = ask('Who will be the author of this web site?', answer=str_compat, default=args.author)
@@ -188,10 +203,10 @@ needed by Pelican.
     else:
         CONF['default_pagination'] = False
 
-    mkfile = ask('Do you want to generate a Makefile to easily manage your website?', bool, True)
+    automation = ask('Do you want to generate a Fabfile/Makefile to automate generation and publishing?', bool, True)
     develop = ask('Do you want an auto-reload & simpleHTTP script to assist with theme and site development?', bool, True)
 
-    if mkfile:
+    if automation:
         if ask('Do you want to upload your website using FTP?', answer=bool, default=False):
             CONF['ftp_host'] = ask('What is the hostname of your FTP server?', str_compat, CONF['ftp_host'])
             CONF['ftp_user'] = ask('What is your username on that server?', str_compat, CONF['ftp_user'])
@@ -203,6 +218,17 @@ needed by Pelican.
             CONF['ssh_target_dir'] = ask('Where do you want to put your web site on that server?', str_compat, CONF['ssh_target_dir'])
         if ask('Do you want to upload your website using Dropbox?', answer=bool, default=False):
             CONF['dropbox_dir'] = ask('Where is your Dropbox directory?', str_compat, CONF['dropbox_dir'])
+        if ask('Do you want to upload your website using S3?', answer=bool, default=False):
+            CONF['s3_bucket'] = ask('What is the name of your S3 bucket?', str_compat, CONF['s3_bucket'])
+        if ask('Do you want to upload your website using Rackspace Cloud Files?', answer=bool, default=False):
+            CONF['cloudfiles_username'] = ask('What is your Rackspace Cloud username?', str_compat, CONF['cloudfiles_username'])
+            CONF['cloudfiles_api_key'] = ask('What is your Rackspace Cloud API key?', str_compat, CONF['cloudfiles_api_key'])
+            CONF['cloudfiles_container'] = ask('What is the name of your Cloud Files container?', str_compat, CONF['cloudfiles_container'])
+        if ask('Do you want to upload your website using GitHub Pages?', answer=bool, default=False):
+            if ask('Is this your personal page (username.github.io)?', answer=bool, default=False):
+                CONF['github_pages_branch'] = _GITHUB_PAGES_BRANCHES['personal']
+            else:
+                CONF['github_pages_branch'] = _GITHUB_PAGES_BRANCHES['project']
 
     try:
         os.makedirs(os.path.join(CONF['basedir'], 'content'))
@@ -236,10 +262,25 @@ needed by Pelican.
     except OSError as e:
         print('Error: {0}'.format(e))
 
-    if mkfile:
+    if automation:
+        try:
+            with codecs.open(os.path.join(CONF['basedir'], 'fabfile.py'), 'w', 'utf-8') as fd:
+                for line in get_template('fabfile.py'):
+                    template = string.Template(line)
+                    fd.write(template.safe_substitute(CONF))
+                fd.close()
+        except OSError as e:
+            print('Error: {0}'.format(e))
         try:
             with codecs.open(os.path.join(CONF['basedir'], 'Makefile'), 'w', 'utf-8') as fd:
-                for line in get_template('Makefile'):
+                mkfile_template_name = 'Makefile'
+                py_v = 'PY?=python'
+                if six.PY3:
+                    py_v = 'PY?=python3'
+                template = string.Template(py_v)
+                fd.write(template.safe_substitute(CONF))
+                fd.write('\n')
+                for line in get_template(mkfile_template_name):
                     template = string.Template(line)
                     fd.write(template.safe_substitute(CONF))
                 fd.close()
@@ -254,7 +295,12 @@ needed by Pelican.
             conf_shell[key] = value
         try:
             with codecs.open(os.path.join(CONF['basedir'], 'develop_server.sh'), 'w', 'utf-8') as fd:
-                for line in get_template('develop_server.sh'):
+                lines = list(get_template('develop_server.sh'))
+                py_v = 'PY=${PY:-python}\n'
+                if six.PY3:
+                    py_v = 'PY=${PY:-python3}\n'
+                lines = lines[:4] + [py_v] + lines[4:]
+                for line in lines:
                     template = string.Template(line)
                     fd.write(template.safe_substitute(conf_shell))
                 fd.close()
@@ -263,3 +309,6 @@ needed by Pelican.
             print('Error: {0}'.format(e))
 
     print('Done. Your new project is available at %s' % CONF['basedir'])
+
+if __name__ == "__main__":
+    main()

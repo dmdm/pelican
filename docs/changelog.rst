@@ -1,10 +1,63 @@
 Release history
 ###############
 
-3.2 (XXXX-XX-XX)
+Next release
+============
+
+* Added the `:modified:` metadata field to complement `:date:`.
+  Used to specify the last date and time an article was updated independently from the date and time it was published.
+* Produce inline links instead of reference-style links when importing content.
+* Multiple authors support added via new `:authors:` metadata field.
+
+3.3.0 (2013-09-24)
+==================
+
+* Drop Python 3.2 support in favor of Python 3.3
+* Add ``Fabfile`` so Fabric can be used for workflow automation instead of Make
+* ``OUTPUT_RETENTION`` setting can be used to preserve metadata (e.g., VCS
+  data such as ``.hg`` and ``.git``) from being removed from output directory
+* Tumblr import
+* Improve logic and consistency when cleaning output folder
+* Improve documentation versioning and release automation
+* Improve pagination flexibility
+* Rename signals for better consistency (some plugins may need to be updated)
+* Move metadata extraction from generators to readers; metadata extraction no
+  longer article-specific
+* Deprecate ``FILES_TO_COPY`` in favor of ``STATIC_PATHS`` and
+  ``EXTRA_PATH_METADATA``
+* Summaries in Markdown posts no longer include footnotes
+* Remove unnecessary whitespace in output via ``lstrip_blocks`` Jinja parameter
+* Move PDF generation from core to plugin
+* Replace ``MARKUP`` setting with ``READERS``
+* Add warning if img tag is missing ``alt`` attribute
+* Add support for ``{}`` in relative links syntax, besides ``||``
+* Add support for ``{tag}`` and ``{category}`` relative links
+* Add a ``content_written`` signal
+
+3.2.1 and 3.2.2
+===============
+
+* Facilitate inclusion in FreeBSD Ports Collection
+
+3.2 (2013-04-24)
 ================
 
 * Support for Python 3!
+* Override page save-to location from meta-data (enables using a static page as
+  the site's home page, for example)
+* Time period archives (per-year, per-month, and per-day archives of posts)
+* Posterous blog import
+* Improve WordPress blog import
+* Migrate plugins to separate repository
+* Improve HTML parser
+* Provide ability to show or hide categories from menu using
+  ``DISPLAY_CATEGORIES_ON_MENU`` option
+* Auto-regeneration can be told to ignore files via ``IGNORE_FILES`` setting
+* Improve post-generation feedback to user
+* For multilingual posts, use meta-data to designate which is the original
+  and which is the translation
+* Add ``.mdown`` to list of supported Markdown file extensions
+* Document-relative URL generation (``RELATIVE_URLS``) is now off by default
 
 3.1 (2012-12-04)
 ================

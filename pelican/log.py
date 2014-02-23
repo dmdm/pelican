@@ -31,13 +31,12 @@ def ansi(color, text):
 
 
 class ANSIFormatter(Formatter):
-    """
-    Convert a `logging.LogRecord' object into colored text, using ANSI escape sequences.
-    """
-    ## colors:
+    """Convert a `logging.LogRecord' object into colored text, using ANSI
+       escape sequences.
 
+    """
     def format(self, record):
-        msg = str(record.msg)
+        msg = record.getMessage()
         if record.levelname == 'INFO':
             return ansi('cyan', '-> ') + msg
         elif record.levelname == 'WARNING':
@@ -59,16 +58,16 @@ class TextFormatter(Formatter):
 
     def format(self, record):
         if not record.levelname or record.levelname == 'INFO':
-            return record.msg
+            return record.getMessage()
         else:
-            return record.levelname + ': ' + record.msg
+            return record.levelname + ': ' + record.getMessage()
 
 
 def init(level=None, logger=getLogger(), handler=StreamHandler()):
     logger = logging.getLogger()
 
-    if os.isatty(sys.stdout.fileno()) \
-       and not sys.platform.startswith('win'):
+    if (os.isatty(sys.stdout.fileno())
+            and not sys.platform.startswith('win')):
         fmt = ANSIFormatter()
     else:
         fmt = TextFormatter()

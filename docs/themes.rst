@@ -17,24 +17,25 @@ To make your own theme, you must follow the following structure::
     │   ├── css
     │   └── images
     └── templates
-        ├── archives.html    // to display archives
-        ├── article.html     // processed for each article
-        ├── author.html      // processed for each author
-        ├── authors.html     // must list all the authors
-        ├── categories.html  // must list all the categories
-        ├── category.html    // processed for each category
-        ├── index.html       // the index. List all the articles
-        ├── page.html        // processed for each page
-        ├── tag.html         // processed for each tag
-        └── tags.html        // must list all the tags. Can be a tag cloud.
+        ├── archives.html         // to display archives
+        ├── period_archives.html  // to display time-period archives
+        ├── article.html          // processed for each article
+        ├── author.html           // processed for each author
+        ├── authors.html          // must list all the authors
+        ├── categories.html       // must list all the categories
+        ├── category.html         // processed for each category
+        ├── index.html            // the index. List all the articles
+        ├── page.html             // processed for each page
+        ├── tag.html              // processed for each tag
+        └── tags.html             // must list all the tags. Can be a tag cloud.
 
 * `static` contains all the static assets, which will be copied to the output
-  `theme` folder. I've put the CSS and image folders here, but they are
-  just examples. Put what you need here.
+  `theme` folder. The above filesystem layout includes CSS and image folders,
+  but those are just examples. Put what you need here.
 
 * `templates` contains all the templates that will be used to generate the content.
-  I've just put the mandatory templates here; you can define your own if it helps
-  you keep things organized while creating your theme.
+  The template files listed above are mandatory; you can add your own templates
+  if it helps you keep things organized while creating your theme.
 
 Templates and variables
 =======================
@@ -43,8 +44,8 @@ The idea is to use a simple syntax that you can embed into your HTML pages.
 This document describes which templates should exist in a theme, and which
 variables will be passed to each template at generation time.
 
-All templates will receive the variables defined in your settings file, if they
-are in all-caps. You can access them directly.
+All templates will receive the variables defined in your settings file, as long
+as they are in all-caps. You can access them directly.
 
 Common variables
 ----------------
@@ -54,17 +55,21 @@ All of these settings will be available to all templates.
 =============   ===================================================
 Variable        Description
 =============   ===================================================
-articles        The list of articles, ordered descending by date
+output_file     The name of the file currently being generated. For
+                instance, when Pelican is rendering the homepage,
+                output_file will be "index.html".
+articles        The list of articles, ordered descending by date.
                 All the elements are `Article` objects, so you can
                 access their attributes (e.g. title, summary, author
-                etc.)
+                etc.). Sometimes this is shadowed (for instance in
+                the tags page). You will then find info about it
+                in the `all_articles` variable.
 dates           The same list of articles, but ordered by date,
-                ascending
+                ascending.
 tags            A list of (tag, articles) tuples, containing all
                 the tags.
 categories      A list of (category, articles) tuples, containing
-                all the categories.
-                and the list of respective articles (values)
+                all the categories and corresponding articles (values)
 pages           The list of pages
 =============   ===================================================
 
@@ -72,7 +77,7 @@ Sorting
 -------
 
 URL wrappers (currently categories, tags, and authors), have
-comparison methods that allow them to be easily sorted by name:
+comparison methods that allow them to be easily sorted by name::
 
     {% for tag, articles in tags|sort %}
 
@@ -80,6 +85,24 @@ If you want to sort based on different criteria, `Jinja's sort
 command`__ has a number of options.
 
 __ http://jinja.pocoo.org/docs/templates/#sort
+
+
+Date Formatting
+---------------
+
+Pelican formats the date according to your settings and locale
+(``DATE_FORMATS``/``DEFAULT_DATE_FORMAT``) and provides a
+``locale_date`` attribute. On the other hand, the ``date`` attribute will
+be a `datetime`_ object. If you need custom formatting for a date
+different than your settings, use the Jinja filter ``strftime``
+that comes with Pelican. Usage is same as Python `strftime`_ format,
+but the filter will do the right thing and format your date according
+to the locale given in your settings::
+
+    {{ article.date|strftime('%d %B %Y') }}
+
+.. _datetime: http://docs.python.org/2/library/datetime.html#datetime-objects
+.. _strftime: http://docs.python.org/2/library/datetime.html#strftime-strptime-behavior
 
 index.html
 ----------
@@ -165,6 +188,32 @@ article         The article object to be displayed
 category        The name of the category for the current article
 =============   ===================================================
 
+Any metadata that you put in the header of the article source file
+will be available as fields on the ``article`` object. The field name will be
+the same as the name of the metadata field, except in all-lowercase characters.
+
+For example, you could add a field called `FacebookImage` to your article
+metadata, as shown below:
+
+.. code-block:: markdown
+
+    Title: I love Python more than music
+    Date: 2013-11-06 10:06
+    Tags: personal, python
+    Category: Tech
+    Slug: python-je-l-aime-a-mourir
+    Author: Francis Cabrel
+    FacebookImage: http://franciscabrel.com/images/pythonlove.png
+
+This new metadata will be made available as `article.facebookimage` in your
+`article.html` template. This would allow you, for example, to specify an
+image for the Facebook open graph tags that will change for each article:
+
+.. code-block:: html+jinja
+
+    <meta property="og:image" content="{{ article.facebookimage }}"/>
+
+
 page.html
 ---------
 
@@ -204,6 +253,29 @@ page_name               TAG_URL where everything after `{slug}` is removed
                         -- useful for pagination links
 ===================     ===================================================
 
+period_archives.html
+--------------------
+
+This template will be processed for each year of your posts if a path
+for YEAR_ARCHIVE_SAVE_AS is defined, each month if MONTH_ARCHIVE_SAVE_AS
+is defined and each day if DAY_ARCHIVE_SAVE_AS is defined.
+
+===================     ===================================================
+Variable                Description
+===================     ===================================================
+period                  A tuple of the form (`year`, `month`, `day`) that
+                        indicates the current time period. `year` and `day`
+                        are numbers while `month` is a string. This tuple
+                        only contains `year` if the time period is a
+                        given year. It contains both `year` and `month`
+                        if the time period is over years and months and
+                        so on.
+
+===================     ===================================================
+
+You can see an example of how to use `period` in the ``simple`` theme's
+period_archives.html
+
 Feeds
 =====
 
@@ -234,7 +306,8 @@ missing, it will be replaced by the matching template from the ``simple`` theme.
 So if the HTML structure of a template in the ``simple`` theme is right for you,
 you don't have to write a new template from scratch.
 
-You can also extend templates from the ``simple`` themes in your own themes by using the ``{% extends %}`` directive as in the following example:
+You can also extend templates from the ``simple`` themes in your own themes by
+using the ``{% extends %}`` directive as in the following example:
 
 .. code-block:: html+jinja
 
@@ -262,14 +335,17 @@ The first file is the ``templates/base.html`` template:
        <link rel="stylesheet" type="text/css" href="{{ SITEURL }}/theme/css/style.css" />
     {% endblock %}
 
+1. On the first line, we extend the ``base.html`` template from the ``simple``
+   theme, so we don't have to rewrite the entire file.
+2. On the third line, we open the ``head`` block which has already been defined
+   in the ``simple`` theme.
+3. On the fourth line, the function ``super()`` keeps the content previously
+   inserted in the ``head`` block.
+4. On the fifth line, we append a stylesheet to the page.
+5. On the last line, we close the ``head`` block.
 
-1.    On the first line, we extend the ``base.html`` template from the ``simple`` theme, so we don't have to rewrite the entire file.
-2.    On the third line, we open the ``head`` block which has already been defined in the ``simple`` theme.
-3.    On the fourth line, the function ``super()`` keeps the content previously inserted in the ``head`` block.
-4.    On the fifth line, we append a stylesheet to the page.
-5.    On the last line, we close the ``head`` block.
-
-This file will be extended by all the other templates, so the stylesheet will be linked from all pages.
+This file will be extended by all the other templates, so the stylesheet will
+be linked from all pages.
 
 style.css
 """""""""

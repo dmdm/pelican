@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 import six
+from six.moves.urllib.parse import unquote
 
 import copy
 import locale
@@ -10,50 +11,61 @@ import os
 import re
 import sys
 
+try:
+    from urlparse import urlparse, urlunparse
+except ImportError:
+    from urllib.parse import urlparse, urlunparse
+
 from datetime import datetime
-from sys import platform, stdin
 
 
-from pelican.settings import _DEFAULT_CONFIG
-from pelican.utils import (slugify, truncate_html_words, memoized,
-    python_2_unicode_compatible, deprecated_attribute)
 from pelican import signals
-import pelican.utils
+from pelican.settings import DEFAULT_CONFIG
+from pelican.utils import (slugify, truncate_html_words, memoized, strftime,
+                           python_2_unicode_compatible, deprecated_attribute,
+                           path_to_url)
+
+# Import these so that they're avalaible when you import from pelican.contents.
+from pelican.urlwrappers import (URLWrapper, Author, Category, Tag)  # NOQA
 
 logger = logging.getLogger(__name__)
 
 
-class Page(object):
-    """Represents a page
-    Given a content, and metadata, create an adequate object.
+class Content(object):
+    """Represents a content.
 
     :param content: the string to parse, containing the original content.
-    """
-    mandatory_properties = ('title',)
-    default_template = 'page'
+    :param metadata: the metadata associated to this page (optional).
+    :param settings: the settings dictionary (optional).
+    :param source_path: The location of the source of this content (if any).
+    :param context: The shared context between generators.
 
+    """
     @deprecated_attribute(old='filename', new='source_path', since=(3, 2, 0))
     def filename():
         return None
 
     def __init__(self, content, metadata=None, settings=None,
                  source_path=None, context=None):
-        # init parameters
-        if not metadata:
+        if metadata is None:
             metadata = {}
-        if not settings:
-            settings = copy.deepcopy(_DEFAULT_CONFIG)
+        if settings is None:
+            settings = copy.deepcopy(DEFAULT_CONFIG)
 
         self.settings = settings
         self._content = content
+        if context is None:
+            context = {}
         self._context = context
         self.translations = []
 
-        local_metadata = dict(settings.get('DEFAULT_METADATA', ()))
+        local_metadata = dict(settings['DEFAULT_METADATA'])
         local_metadata.update(metadata)
 
         # set metadata as attributes
         for key, value in local_metadata.items():
+            if key in ('save_as', 'url'):
+                key = 'override_' + key
             setattr(self, key.lower(), value)
 
         # also keep track of the metadata attributes available
@@ -62,10 +74,18 @@ class Page(object):
         #default template if it's not defined in page
         self.template = self._get_template()
 
-        # default author to the one in settings if not defined
+        # First, read the authors from "authors", if not, fallback to "author"
+        # and if not use the settings defined one, if any.
         if not hasattr(self, 'author'):
-            if 'AUTHOR' in settings:
+            if hasattr(self, 'authors'):
+                self.author = self.authors[0]
+            elif 'AUTHOR' in settings:
                 self.author = Author(settings['AUTHOR'], settings)
+
+        if not hasattr(self, 'authors') and hasattr(self, 'author'):
+            self.authors = [self.author]
+
+        # XXX Split all the following code into pieces, there is too much here.
 
         # manage languages
         self.in_default_lang = True
@@ -78,10 +98,10 @@ class Page(object):
 
         # create the slug if not existing, from the title
         if not hasattr(self, 'slug') and hasattr(self, 'title'):
-            self.slug = slugify(self.title)
+            self.slug = slugify(self.title,
+                                settings.get('SLUG_SUBSTITUTIONS', ()))
 
-        if source_path:
-            self.source_path = source_path
+        self.source_path = source_path
 
         # manage the date format
         if not hasattr(self, 'date_format'):
@@ -92,14 +112,16 @@ class Page(object):
 
         if isinstance(self.date_format, tuple):
             locale_string = self.date_format[0]
-            if sys.version_info < (3, ) and isinstance(locale_string, six.text_type):
+            if sys.version_info < (3, ) and isinstance(locale_string,
+                                                       six.text_type):
                 locale_string = locale_string.encode('ascii')
             locale.setlocale(locale.LC_ALL, locale_string)
             self.date_format = self.date_format[1]
 
         if hasattr(self, 'date'):
-            self.locale_date = pelican.utils.strftime(self.date,
-                self.date_format)
+            self.locale_date = strftime(self.date, self.date_format)
+        if hasattr(self, 'modified'):
+            self.locale_modified = strftime(self.modified, self.date_format)
 
         # manage status
         if not hasattr(self, 'status'):
@@ -112,25 +134,43 @@ class Page(object):
         if 'summary' in metadata:
             self._summary = metadata['summary']
 
-        signals.content_object_init.send(self.__class__, instance=self)
+        signals.content_object_init.send(self)
+
+    def __str__(self):
+        if self.source_path is None:
+            return repr(self)
+        elif six.PY3:
+            return self.source_path or repr(self)
+        else:
+            return str(self.source_path.encode('utf-8', 'replace'))
 
     def check_properties(self):
-        """test that each mandatory property is set."""
+        """Test mandatory properties are set."""
         for prop in self.mandatory_properties:
             if not hasattr(self, prop):
                 raise NameError(prop)
 
     @property
     def url_format(self):
+        """Returns the URL, formatted with the proper values"""
         metadata = copy.copy(self.metadata)
+        path = self.metadata.get('path', self.get_relative_source_path())
+        default_category = self.settings['DEFAULT_CATEGORY']
+        slug_substitutions = self.settings.get('SLUG_SUBSTITUTIONS', ())
         metadata.update({
+            'path': path_to_url(path),
             'slug': getattr(self, 'slug', ''),
             'lang': getattr(self, 'lang', 'en'),
             'date': getattr(self, 'date', datetime.now()),
-            'author': getattr(self, 'author', ''),
-            'category': getattr(self, 'category',
-                self.settings['DEFAULT_CATEGORY']),
-            })
+            'author': slugify(
+                getattr(self, 'author', ''),
+                slug_substitutions
+            ),
+            'category': slugify(
+                getattr(self, 'category', default_category),
+                slug_substitutions
+            )
+        })
         return metadata
 
     def _expand_settings(self, key):
@@ -138,74 +178,105 @@ class Page(object):
         return self.settings[fq_key].format(**self.url_format)
 
     def get_url_setting(self, key):
+        if hasattr(self, 'override_' + key):
+            return getattr(self, 'override_' + key)
         key = key if self.in_default_lang else 'lang_%s' % key
         return self._expand_settings(key)
 
     def _update_content(self, content, siteurl):
-        """Change all the relative paths of the content to relative paths
+        """Update the content attribute.
+
+        Change all the relative paths of the content to relative paths
         suitable for the ouput content.
 
         :param content: content resource that will be passed to the templates.
         :param siteurl: siteurl which is locally generated by the writer in
-            case of RELATIVE_URLS.
+                        case of RELATIVE_URLS.
         """
-        hrefs = re.compile(r"""
-            (?P<markup><\s*[^\>]*  # match tag with src and href attr
-                (?:href|src)\s*=)
+        if not content:
+            return content
+
+        instrasite_link_regex = self.settings['INTRASITE_LINK_REGEX']
+        regex = r"""
+            (?P<markup><\s*[^\>]*  # match tag with all url-value attributes
+                (?:href|src|poster|data|cite|formaction|action)\s*=)
 
             (?P<quote>["\'])      # require value to be quoted
-            (?P<path>\|(?P<what>.*?)\|(?P<value>.*?))  # the url value
-            \2""", re.X)
+            (?P<path>{0}(?P<value>.*?))  # the url value
+            \2""".format(instrasite_link_regex)
+        hrefs = re.compile(regex, re.X)
 
         def replacer(m):
             what = m.group('what')
-            value = m.group('value')
+            value = urlparse(m.group('value'))
+            path = value.path
             origin = m.group('path')
-            # we support only filename for now. the plan is to support
-            # categories, tags, etc. in the future, but let's keep things
-            # simple for now.
+
+            # XXX Put this in a different location.
             if what == 'filename':
-                if value.startswith('/'):
-                    value = value[1:]
+                if path.startswith('/'):
+                    path = path[1:]
                 else:
                     # relative to the source path of this content
-                    value = self.get_relative_source_path(
-                        os.path.join(self.relative_dir, value)
+                    path = self.get_relative_source_path(
+                        os.path.join(self.relative_dir, path)
                     )
 
-                if value in self._context['filenames']:
+                if path not in self._context['filenames']:
+                    unquoted_path = path.replace('%20', ' ')
+
+                    if unquoted_path in self._context['filenames']:
+                        path = unquoted_path
+
+                if path in self._context['filenames']:
                     origin = '/'.join((siteurl,
-                             self._context['filenames'][value].url))
+                             self._context['filenames'][path].url))
+                    origin = origin.replace('\\', '/')  # for Windows paths.
                 else:
                     logger.warning("Unable to find {fn}, skipping url"
-                                    " replacement".format(fn=value))
+                                   " replacement".format(fn=path))
+            elif what == 'category':
+                origin = Category(path, self.settings).url
+            elif what == 'tag':
+                origin = Tag(path, self.settings).url
 
-            return m.group('markup') + m.group('quote') + origin \
-                    + m.group('quote')
+            # keep all other parts, such as query, fragment, etc.
+            parts = list(value)
+            parts[2] = origin
+            origin = urlunparse(parts)
+
+            return ''.join((m.group('markup'), m.group('quote'), origin,
+                            m.group('quote')))
 
         return hrefs.sub(replacer, content)
 
     @memoized
     def get_content(self, siteurl):
-        return self._update_content(
-                self._get_content() if hasattr(self, "_get_content")
-                    else self._content,
-                siteurl)
+
+        if hasattr(self, '_get_content'):
+            content = self._get_content()
+        else:
+            content = self._content
+        return self._update_content(content, siteurl)
 
     @property
     def content(self):
-        return self.get_content(self._context['localsiteurl'])
+        return self.get_content(self._context.get('localsiteurl', ''))
 
     def _get_summary(self):
-        """Returns the summary of an article, based on the summary metadata
-        if it is set, else truncate the content."""
+        """Returns the summary of an article.
+
+        This is based on the summary metadata if set, otherwise truncate the
+        content.
+        """
         if hasattr(self, '_summary'):
             return self._summary
-        else:
-            if self.settings['SUMMARY_MAX_LENGTH']:
-                return truncate_html_words(self.content,
-                        self.settings['SUMMARY_MAX_LENGTH'])
+
+        if self.settings['SUMMARY_MAX_LENGTH'] is None:
             return self.content
+
+        return truncate_html_words(self.content,
+                                   self.settings['SUMMARY_MAX_LENGTH'])
 
     def _set_summary(self, summary):
         """Dummy function"""
@@ -213,7 +284,6 @@ class Page(object):
 
     summary = property(_get_summary, _set_summary, "Summary of the article."
                        "Based on the content. Can't be set")
-
     url = property(functools.partial(get_url_setting, key='url'))
     save_as = property(functools.partial(get_url_setting, key='save_as'))
 
@@ -232,6 +302,8 @@ class Page(object):
         """
         if not source_path:
             source_path = self.source_path
+        if source_path is None:
+            return None
 
         return os.path.relpath(
             os.path.abspath(os.path.join(self.settings['PATH'], source_path)),
@@ -246,6 +318,11 @@ class Page(object):
         )
 
 
+class Page(Content):
+    mandatory_properties = ('title',)
+    default_template = 'page'
+
+
 class Article(Page):
     mandatory_properties = ('title', 'date', 'category')
     default_template = 'article'
@@ -256,87 +333,18 @@ class Quote(Page):
 
 
 @python_2_unicode_compatible
-@functools.total_ordering
-class URLWrapper(object):
-    def __init__(self, name, settings):
-        self.name = name
-        self.slug = slugify(self.name)
-        self.settings = settings
-
-    def as_dict(self):
-        return self.__dict__
-
-    def __hash__(self):
-        return hash(self.name)
-
-    def _key(self):
-        return self.name
-
-    def _normalize_key(self, key):
-        return six.text_type(key)
-
-    def __eq__(self, other):
-        return self._key() == self._normalize_key(other)
-
-    def __ne__(self, other):
-        return self._key() != self._normalize_key(other)
-
-    def __lt__(self, other):
-        return self._key() < self._normalize_key(other)
-
-    def __str__(self):
-        return self.name
-
-    def _from_settings(self, key, get_page_name=False):
-        """Returns URL information as defined in settings. 
-        When get_page_name=True returns URL without anything after {slug}
-        e.g. if in settings: CATEGORY_URL="cat/{slug}.html" this returns "cat/{slug}"
-        Useful for pagination."""
-        setting = "%s_%s" % (self.__class__.__name__.upper(), key)
-        value = self.settings[setting]
-        if not isinstance(value, six.string_types):
-            logger.warning('%s is set to %s' % (setting, value))
-            return value
-        else:
-            if get_page_name:
-                return os.path.splitext(value)[0].format(**self.as_dict())
-            else:
-                return value.format(**self.as_dict())
-
-    page_name = property(functools.partial(_from_settings, key='URL', get_page_name=True))
-    url = property(functools.partial(_from_settings, key='URL'))
-    save_as = property(functools.partial(_from_settings, key='SAVE_AS'))
-
-
-class Category(URLWrapper):
-    pass
-
-
-class Tag(URLWrapper):
-    def __init__(self, name, *args, **kwargs):
-        super(Tag, self).__init__(name.strip(), *args, **kwargs)
-
-
-class Author(URLWrapper):
-    pass
-
-
-@python_2_unicode_compatible
-class StaticContent(object):
+class Static(Page):
     @deprecated_attribute(old='filepath', new='source_path', since=(3, 2, 0))
     def filepath():
         return None
 
-    def __init__(self, src, dst=None, settings=None):
-        if not settings:
-            settings = copy.deepcopy(_DEFAULT_CONFIG)
-        self.src = src
-        self.url = dst or src
-        self.source_path = os.path.join(settings['PATH'], src)
-        self.save_as = os.path.join(settings['OUTPUT_PATH'], self.url)
+    @deprecated_attribute(old='src', new='source_path', since=(3, 2, 0))
+    def src():
+        return None
 
-    def __str__(self):
-        return self.source_path
+    @deprecated_attribute(old='dst', new='save_as', since=(3, 2, 0))
+    def dst():
+        return None
 
 
 def is_valid_content(content, f):
@@ -344,6 +352,6 @@ def is_valid_content(content, f):
         content.check_properties()
         return True
     except NameError as e:
-        logger.error("Skipping %s: impossible to find informations about "
-                      "'%s'" % (f, e))
+        logger.error("Skipping %s: could not find information about "
+                     "'%s'" % (f, e))
         return False
